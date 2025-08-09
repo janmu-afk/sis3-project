@@ -1,3 +1,8 @@
+// a note on endpoint comment syntax
+// ?x=&y= implies HEADER params
+// : x, y implies BODY params
+
+
 // import dependencies and initialize the express app
 const express = require('express')
 require('dotenv').config()

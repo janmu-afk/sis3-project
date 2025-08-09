@@ -1,6 +1,9 @@
 **/*.xlsx
-backend/datasets
+backend/datasets/**
 backend/uploads/*
 backend/routes/upload.js
 backend/routes/users.js
 backend/routes/novice.js
+.env
+backend/scripts/data
+backend/node_modules
