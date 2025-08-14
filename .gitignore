@@ -7,3 +7,5 @@ backend/routes/novice.js
 .env
 backend/scripts/data
 backend/node_modules
+
+frontend/node_modules

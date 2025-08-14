@@ -120,6 +120,15 @@ dataPool.registerUser = (user, pass, email) => {
 }
 
 // GET /user/bookmarks
+dataPool.listUserBookmarks = (id) => {
+  return new Promise((resolve, reject) => {
+    conn.query(`SELECT ime FROM Zdravnik AS Z JOIN Zaznamek AS Za ON Z.sifra_zd = Za.sifra_zd JOIN Uporabnik AS U ON Za.enaslov = U.enaslov WHERE enaslov = ?`, id, (err, res) => {
+      if (err) { return reject(err) }
+      return resolve(res)
+    })
+  })
+}
+
 // POST /user/bookmarks/id
 
 module.exports = dataPool;
