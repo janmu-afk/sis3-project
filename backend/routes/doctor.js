@@ -67,28 +67,34 @@ doctor.post('/export/:id', async (req, res, next) => {
     }
     else {
         res.json({ success: false, message: "invalid format choice, use csv/json" });
+        res.sendStatus(400);
     }
 })
 
 
-// GET /doctor/series/id: date_start=&date_end=
+// GET /doctor/series/id: date_start, date_end, datapoint
 // fetches doctor info and constructs line chart data
-doctor.get('/series/:id', async (req, res, next) => {
+doctor.post('/series/:id', async (req, res, next) => {
     var date_start = req.body.date_start;
     var date_end = req.body.date_end;
+    var datapoint = req.body.datapoint;
+
+
+    const fn =
+    datapoint === 'obseg'     ? DB.fetchDocRangeSeriesObseg :
+    datapoint === 'kolicnik'  ? DB.fetchDocRangeSeriesKolicnik :
+    null;
+
+    if (!fn) return res.status(400).json({ message: 'invalid variable choice, use obseg/kolicnik' });
+
     try {
-        var queryResult = await DB.fetchDocRange(req.params.id, date_start, date_end);
-        res.json(queryResult)
+        const rows = await fn(req.params.id, date_start, date_end);
+        return res.status(200).json(Array.isArray(rows) ? rows : []);
+    } catch (err) {
+        console.error('series error:', err);
+        return res.sendStatus(500);
     }
-    catch (err) {
-        console.log(err)
-        res.sendStatus(500)
-    }
-
-    // graph construction
-    // Recharts uses { time: 'YYYY-MM-DD', value: x } formatting
-})
-
+});
 
 // POST /doctor/comment/:id: text
 doctor.post('/comment/:id',  async (req, res, next) => {

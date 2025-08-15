@@ -62,7 +62,7 @@ dataPool.postComment = (id, text, email) => {
   })
 }
 
-// GET /doctor/export/id?date-start=&date_end=&format=(json/csv)
+// GET /doctor/export/id: date_start, date_end
 dataPool.fetchDocRange = (id, datA, datB) => {
   return new Promise((resolve, reject) => {
     conn.query(`SELECT ime, naziv_de, naziv_iz, enota, ulica, kraj, obseg, kolicnik, sprejem FROM Zdravnik AS Z JOIN Dejavnost AS D ON Z.sifra_de = D.sifra_de JOIN Izvajalec AS I ON Z.sifra_iz = I.sifra_iz JOIN Zaposlitev_zdravnika AS Za ON Z.sifra_zd = Za.sifra_zd WHERE Z.sifra_zd = ? AND datum BETWEEN ? AND ?`, [Number(id), datA, datB], (err, res) => {
@@ -72,14 +72,31 @@ dataPool.fetchDocRange = (id, datA, datB) => {
   })
 }
 
-// GET /doctor/series/id: date_start=&date_end=
+// GET /doctor/series/id: date_start, date_end, var
+dataPool.fetchDocRangeSeriesObseg = (id, datA, datB) => {
+  return new Promise((resolve, reject) => {
+    conn.query(`SELECT obseg AS value, datum AS time FROM Zdravnik AS Z JOIN Dejavnost AS D ON Z.sifra_de = D.sifra_de JOIN Izvajalec AS I ON Z.sifra_iz = I.sifra_iz JOIN Zaposlitev_zdravnika AS Za ON Z.sifra_zd = Za.sifra_zd WHERE Z.sifra_zd = ? AND datum BETWEEN ? AND ?`, [Number(id), datA, datB], (err, res) => {
+      if (err) { return reject(err) }
+      return resolve(res)
+    })
+  })
+}
+dataPool.fetchDocRangeSeriesKolicnik = (id, datA, datB) => {
+  return new Promise((resolve, reject) => {
+    conn.query(`SELECT kolicnik AS value, datum AS time FROM Zdravnik AS Z JOIN Dejavnost AS D ON Z.sifra_de = D.sifra_de JOIN Izvajalec AS I ON Z.sifra_iz = I.sifra_iz JOIN Zaposlitev_zdravnika AS Za ON Z.sifra_zd = Za.sifra_zd WHERE Z.sifra_zd = ? AND datum BETWEEN ? AND ?`, [Number(id), datA, datB], (err, res) => {
+      if (err) { return reject(err) }
+      return resolve(res)
+    })
+  })
+}
+
 
 
 
 
 // user funcs
 
-// POST /user/register?username=&password=&email=
+// POST /user/register: username, password, email
 dataPool.registerUser = (user, pass, email) => {
   return new Promise((resolve, reject) => {
     conn.query(`INSERT INTO Uporabnik (username, geslo, enaslov) VALUES (?,?,?)`, [user, pass, email], (err, res) => {

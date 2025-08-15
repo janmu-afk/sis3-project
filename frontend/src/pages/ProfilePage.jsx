@@ -7,6 +7,10 @@ import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import ListGroup from "react-bootstrap/ListGroup";
 import Modal from "react-bootstrap/Modal";
+import {
+  ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
+} from "recharts";
+
 
 export default function ProfilePage() {
   const { id } = useParams();
@@ -128,35 +132,64 @@ export default function ProfilePage() {
 }
 
 function GraphModal({ show, onHide, id }) {
-  const [variable, setVariable] = useState("A");
+  const [variable, setVariable] = useState("obseg");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const [series, setSeries] = useState(null);
+  const [series, setSeries] = useState([]);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
 
   const fetchSeries = async () => {
-    const { data } = await api.get(`/api/profiles/${id}/series`, { params: { from, to, variable } });
-    setSeries(data || []);
+    setBusy(true); setErr("");
+    try {
+      const body = { datapoint: variable, date_start: from || undefined, date_end: to || undefined };
+      const { data } = await api.post(`/doctor/series/${id}`, body, { timeout: 60000 });
+      setSeries(Array.isArray(data) ? data : []);
+    } catch (e) {
+      setSeries([]);
+      setErr(e?.response?.data?.message || "Failed to load series");
+    } finally {
+      setBusy(false);
+    }
   };
+
+  const chartData = (series || [])
+    .map(p => {
+      const d = p.date ?? p.datum ?? p.day ?? p.ts ?? p.time;
+      const date = typeof d === "number" ? new Date(d).toISOString().slice(0,10) : (typeof d === "string" ? d.slice(0,10) : "");
+      return { date, value: Number(p.value ?? p.val ?? p.y) };
+    })
+    .filter(p => p.date && Number.isFinite(p.value));
 
   return (
     <Modal show={show} onHide={onHide} centered size="lg">
       <Modal.Header closeButton><Modal.Title>Generate Graph</Modal.Title></Modal.Header>
       <Modal.Body>
-        <div className="d-flex gap-2 mb-2">
+        <div className="d-flex gap-2 mb-3">
           <Form.Select value={variable} onChange={e => setVariable(e.target.value)} style={{ maxWidth: 180 }}>
-            <option value="A">Variable A</option>
-            <option value="B">Variable B</option>
+            <option value="obseg">Obseg</option>
+            <option value="kolicnik">Količnik</option>
           </Form.Select>
           <Form.Control type="date" value={from} onChange={e => setFrom(e.target.value)} />
           <Form.Control type="date" value={to} onChange={e => setTo(e.target.value)} />
-          <Button onClick={fetchSeries}>Fetch</Button>
+          <Button onClick={fetchSeries} disabled={busy}>{busy ? "Fetching…" : "Fetch"}</Button>
         </div>
-        {Array.isArray(series) && series.length > 0 && (
-          <ListGroup style={{ maxHeight: 260, overflow: 'auto' }}>
-            {series.map((p, i) => (
-              <ListGroup.Item key={i}>{p.date}: {p.value}</ListGroup.Item>
-            ))}
-          </ListGroup>
+
+        {err && <div className="alert alert-danger">{err}</div>}
+        {!err && !busy && chartData.length === 0 && <div className="text-muted">No data.</div>}
+
+        {chartData.length > 0 && (
+          <div style={{ width: "100%", height: 300 }}>
+            <ResponsiveContainer>
+              <LineChart data={chartData} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip />
+                <Line type="monotone" dataKey="value" dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         )}
       </Modal.Body>
       <Modal.Footer>
@@ -165,6 +198,8 @@ function GraphModal({ show, onHide, id }) {
     </Modal>
   );
 }
+
+
 
 function ExportModal({ show, onHide, id }) {
   const [format, setFormat] = useState("csv");
