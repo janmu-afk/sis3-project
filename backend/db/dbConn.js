@@ -31,10 +31,10 @@ dataPool.listDocs = () => {
 }
 
 // GET /doctor/id
-// NOTE: might need to rewrite later
+// NOTE: currently fetches the nearest date
 dataPool.fetchDoc = (id) => {
   return new Promise((resolve, reject) => {
-    conn.query(`SELECT ime, naziv_de, naziv_iz, enota, ulica, kraj, kolicnik, obseg, sprejem FROM Zdravnik AS Z JOIN Dejavnost AS D ON Z.sifra_de = D.sifra_de JOIN Izvajalec AS I ON Z.sifra_iz = I.sifra_iz JOIN Zaposlitev_zdravnika AS Za ON Z.sifra_zd = Za.sifra_zd WHERE datum = CURDATE() AND Z.sifra_zd = ?`, Number(id), (err, res) => {
+    conn.query(`SELECT ime, naziv_de, naziv_iz, enota, ulica, kraj, kolicnik, obseg, sprejem, datum FROM Zdravnik AS Z JOIN Dejavnost AS D ON Z.sifra_de = D.sifra_de JOIN Izvajalec AS I ON Z.sifra_iz = I.sifra_iz JOIN Zaposlitev_zdravnika AS Za ON Z.sifra_zd = Za.sifra_zd WHERE Z.sifra_zd = ? ORDER BY Za.datum DESC LIMIT 1`, Number(id), (err, res) => {
       if (err) { return reject(err) }
       return resolve(res)
     })
@@ -100,18 +100,19 @@ dataPool.registerUser = (user, pass, email) => {
 }
 
 // GET /user/bookmarks
-dataPool.listUserBookmarks = (id) => {
+dataPool.listUserBookmarks = (email) => {
   return new Promise((resolve, reject) => {
-    conn.query(`SELECT ime FROM Zdravnik AS Z JOIN Zaznamek AS Za ON Z.sifra_zd = Za.sifra_zd JOIN Uporabnik AS U ON Za.enaslov = U.enaslov WHERE enaslov = ?`, id, (err, res) => {
+    conn.query(`SELECT ime, Z.sifra_zd FROM Zdravnik AS Z JOIN Zaznamek AS Za ON Z.sifra_zd = Za.sifra_zd JOIN Uporabnik AS U ON Za.enaslov = U.enaslov WHERE U.enaslov = ?`, email, (err, res) => {
       if (err) { return reject(err) }
       return resolve(res)
     })
   })
 }
 
-dataPool.listUserBookmarks = (id) => {
+// POST /user/bookmarks
+dataPool.postBookmark = (email, id) => {
   return new Promise((resolve, reject) => {
-    conn.query(`INSERT INTO Zaznamek VALUES ?`, id, (err, res) => {
+    conn.query(`INSERT INTO Zaznamek VALUES (?,?)`, [email, Number(id)], (err, res) => {
       if (err) { return reject(err) }
       return resolve(res)
     })
@@ -140,7 +141,7 @@ dataPool.listSpecializations = () => {
   })
 }
 
-// special (in use within backend)
+// special (in use only within backend)
 
 // get the user's password
 dataPool.getPassword = (username) => {

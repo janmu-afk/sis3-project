@@ -98,7 +98,7 @@ users.post('/login', async (req, res) => {
 });
 
 
-users.get('/logout', async (req,res, next)=>{
+users.get('/logout', async (req,res, next) => {
    try{
        req.session.destroy(function(err) {
            res.json({status:{success: true, msg: err}})
@@ -113,10 +113,10 @@ users.get('/logout', async (req,res, next)=>{
    }
 })
 
-users.get('/bookmarks', async (req,res, next)=>{
+users.get('/bookmarks', async (req,res, next) => {
     if (req.session.logged_in) {
         try {
-            let bookmarks = await DB.listUserBookmarks(req.session.username);
+            let bookmarks = await DB.listUserBookmarks(req.session.email);
             res.json(bookmarks);
         } catch(err) {
             console.log(err)
@@ -124,10 +124,12 @@ users.get('/bookmarks', async (req,res, next)=>{
     }
 })
 
-users.post('/bookmarks', async (req,res, next)=>{
-    if (req.session.logged_in) {
+users.post('/bookmarks/:id', async (req,res, next) => {
+    console.log(req.session.email)
+    var id = req.params.id;
+    if (req.session.logged_in && id) {
         try {
-            let bookmarks = await DB.postBookmark(req.session.username);
+            let bookmarks = await DB.postBookmark(req.session.email, id);
             res.json(bookmarks);
         } catch(err) {
             console.log(err)

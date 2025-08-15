@@ -18,23 +18,47 @@ export default function ProfilePage() {
   const [showGraph, setShowGraph] = useState(false);
   const [showExport, setShowExport] = useState(false);
 
+  function Field({ label, value }) {
+  if (value == null || value === "") return null; // skip empty rows
+  return (
+    <ListGroup.Item className="d-flex py-2">
+      <div className="me-3 text-muted" style={{ minWidth: 140 }}>{label}</div>
+      <div className="flex-fill">{value}</div>
+    </ListGroup.Item>
+  );
+}
+  const dateFmt = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
+  function formatDateOnly(x) {
+    if (!x) return "";
+    if (typeof x === "string") {
+      // Works for "YYYY-MM-DD" and "YYYY-MM-DD HH:MM:SS"
+      const m = x.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (m) {
+        const [, y, mo, d] = m;
+        return dateFmt.format(new Date(Number(y), Number(mo) - 1, Number(d)));
+      }
+    }
+    const d = new Date(x); // ISO or epoch
+    return Number.isNaN(d.getTime()) ? String(x) : dateFmt.format(d);
+  }
+
   const load = async () => {
     const [{ data: p }, { data: c }] = await Promise.all([
       api.get(`/doctor/${id}`),
       api.get(`/doctor/annotation/${id}`)
     ]);
-    setProfile(p); setComments(c || []);
+    setProfile(Array.isArray(p) ? (p[0] ?? null) : (p ?? null)); setComments(c || []);
   };
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
 
-  const toggleBookmark = async () => { await api.post(`/api/profiles/${id}/bookmark`); await refresh(); };
+  const toggleBookmark = async () => { await api.post(`/user/bookmarks/${id}`); await refresh(); };
 
   const postComment = async () => {
     if (!newComment.trim()) return;
     await api.post(`/api/profiles/${id}/comments`, { text: newComment.trim() });
     setNewComment("");
-    const { data } = await api.get(`/api/profiles/${id}/comments`);
+    const { data } = await api.get(`/user/bookmarks/${id}`);
     setComments(data || []);
   };
 
@@ -44,13 +68,24 @@ export default function ProfilePage() {
     <>
       <Card className="mb-3">
         <Card.Body>
-          <Card.Title>{profile.ime || id}</Card.Title>
-          {profile.naziv_iz && <div className="text-muted">{profile.naziv_de}</div>}
-          {/* more fields as needed */}
+          <Card.Title>{profile.ime}</Card.Title>
+          <ListGroup variant="flush" className="mb-2">
+            {/* the date is hacky but it will do :/ */}
+            <Field label="Datum zadnjega vnosa" value={profile.datum ? `${formatDateOnly(profile.datum)}` : ""} />
+            <Field label="Dejavnost" value={profile.naziv_de} />
+            <Field label="Izvajalec" value={profile.naziv_iz} />
+            <Field label="Enota"     value={profile.enota} />
+            <Field label="Naslov"    value={[profile.ulica, profile.kraj].filter(Boolean).join(", ")} />
+            <Field label="Glavarinski količnik" value={profile.kolicnik} />
+            <Field label="Obseg dela"      value={String(profile.obseg * 100) + '%'} />
+            <Field label="Sprejema paciente?"    value={(profile.sprejem === 1 ? "DA" : "NE")} />
+          </ListGroup>
           <div className="mt-2 d-flex gap-2">
             <Button variant="outline-primary" onClick={() => setShowGraph(true)}>Generate Graph</Button>
             <Button variant="outline-secondary" onClick={() => setShowExport(true)}>Generate Dataset</Button>
-            {user && <Button onClick={toggleBookmark}>Bookmark</Button>}
+            {user?.username && (
+              <Button onClick={toggleBookmark}>Bookmark</Button>
+            )}
           </div>
         </Card.Body>
       </Card>
@@ -61,13 +96,13 @@ export default function ProfilePage() {
           <ListGroup.Item key={c.id}>
             <div>{c.text}</div>
             <div className="text-muted small">
-              {c.author?.username}{c.createdAt ? ` • ${new Date(c.createdAt).toLocaleString()}` : ""}
+              {c.author?.username}{profile.datum ? `${formatDateOnly(profile.datum)}` : ""}
             </div>
           </ListGroup.Item>
         ))}
       </ListGroup>
 
-      {user ? (
+      {user?.username ? (
         <div className="d-flex gap-2">
           <Form.Control
             placeholder="Write a comment…"

@@ -18,7 +18,7 @@ export default function TopBar() {
     <>
       <Navbar bg="dark" variant="dark" expand="sm">
         <Container>
-          <Navbar.Brand href="/">App</Navbar.Brand>
+          <Navbar.Brand href="/">DocTracker</Navbar.Brand>
           <Nav className="ms-auto">
             {!user?.username ? (
               <>
@@ -26,29 +26,45 @@ export default function TopBar() {
                 <Button className="ms-2" size="sm" onClick={() => setShowRegister(true)}>Register</Button>
               </>
             ) : (
-              <Dropdown align="end" show={bmOpen} onToggle={setBmOpen}>
-                <Dropdown.Toggle
-                  as={Button}
-                  variant="outline-light"
-                  size="sm"
-                  onClick={async () => {
-                    setBmOpen(o => !o);
-                    if (!bmOpen) {
-                      const { data } = await api.get("/user/bookmarks");
-                      setBmItems(Array.isArray(data) ? data : []);
-                    }
-                  }}
-                >
-                  {user.username}'s bookmarks
-                </Dropdown.Toggle>
-                <Dropdown.Menu>
-                  {bmItems.length === 0 ? (
-                    <Dropdown.Item disabled>No bookmarks</Dropdown.Item>
-                  ) : (
-                    bmItems.map((name, i) => <Dropdown.Item key={i} disabled>{name}</Dropdown.Item>)
-                  )}
-                </Dropdown.Menu>
-              </Dropdown>
+              <>
+                <Button className="ms-2" size="sm" onClick={logout}>Log out</Button>
+                <Dropdown align="end" show={bmOpen} onToggle={setBmOpen}>
+                  <Dropdown.Toggle
+                    as={Button}
+                    variant="outline-light"
+                    size="sm"
+                    onClick={async () => {
+                      setBmOpen(o => !o);
+                      if (!bmOpen) {
+                        const { data } = await api.get("/user/bookmarks");
+                        setBmItems(Array.isArray(data) ? data : []);
+                      }
+                    }}
+                  >
+                    {user.username}'s bookmarks
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu>
+                    {bmItems.length === 0 ? (
+    <Dropdown.Item disabled>No bookmarks</Dropdown.Item>
+                    ) : (
+                      bmItems.map((b, i) => {
+                        const id    = typeof b === "string" ? b : (b.sifra_zd);
+                        const label = typeof b === "string" ? b : (b.ime);
+                        return (
+                          <Dropdown.Item
+                            as={Link}
+                            to={`/${id}`}
+                            key={id}
+                            onClick={() => setBmOpen(false)}   // close after navigating (since you're controlling `show`)
+                          >
+                            {label}
+                          </Dropdown.Item>
+                        );
+                      })
+                    )}
+                  </Dropdown.Menu>
+                </Dropdown>
+              </>
             )}
           </Nav>
         </Container>

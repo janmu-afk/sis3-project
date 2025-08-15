@@ -38,7 +38,7 @@ export default function SearchPage() {
   return (
     <>
       <Form.Control
-        placeholder="Search…"
+        placeholder="Iskanje..."
         value={q}
         onChange={e => setQ(e.target.value)}
         className="mb-3"
