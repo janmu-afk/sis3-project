@@ -65,24 +65,14 @@ dataPool.postComment = (id, text, email) => {
 // GET /doctor/export/id?date-start=&date_end=&format=(json/csv)
 dataPool.fetchDocRange = (id, datA, datB) => {
   return new Promise((resolve, reject) => {
-    conn.query(`SELECT ime, naziv_de, naziv_iz, enota, ulica, kraj, obseg, kolicnik, sprejem FROM Zdravnik AS Z JOIN Dejavnost AS D ON Z.sifra_de = D.sifra_de JOIN Izvajalec AS I ON Z.sifra_iz = I.sifra_iz JOIN Zaposlitev_zdravnika AS Za ON Z.sifra_zd = Za.sifra_zd WHERE sifra_zd = ? AND datum BETWEEN ? AND ?`, [id, datA, datB], (err, res) => {
+    conn.query(`SELECT ime, naziv_de, naziv_iz, enota, ulica, kraj, obseg, kolicnik, sprejem FROM Zdravnik AS Z JOIN Dejavnost AS D ON Z.sifra_de = D.sifra_de JOIN Izvajalec AS I ON Z.sifra_iz = I.sifra_iz JOIN Zaposlitev_zdravnika AS Za ON Z.sifra_zd = Za.sifra_zd WHERE Z.sifra_zd = ? AND datum BETWEEN ? AND ?`, [Number(id), datA, datB], (err, res) => {
       if (err) { return reject(err) }
       return resolve(res)
     })
   })
 }
 
-
-// GET /doctor/comparison/id?date_start=&date_end=&arg=
-dataPool.fetchDocRange = (id) => {
-  return new Promise((resolve, reject) => {
-    conn.query(`SELECT obseg, kolicnik FROM Zaposlitev_zdravnika AS Za JOIN Zdravnik AS Z ON Za.sifra_zd = Z.sifra_zd WHERE sifra_zd = ?`, id, (err, res) => {
-      if (err) { return reject(err) }
-      return resolve(res)
-    })
-  })
-}
-
+// GET /doctor/series/id: date_start=&date_end=
 
 
 

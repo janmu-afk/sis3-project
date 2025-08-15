@@ -12,6 +12,8 @@ export default function ProfilePage() {
   const { id } = useParams();
   const { user, refresh } = useAuth();
 
+  
+
   const [profile, setProfile] = useState(null);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
@@ -169,16 +171,33 @@ function ExportModal({ show, onHide, id }) {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
 
-  const download = async () => {
-    const res = await api.get(`/api/profiles/${id}/export`, {
-      params: { from, to, format }, responseType: "blob"
+  const download = async () => {  
+
+    const body = { date_start: from || undefined, date_end: to || undefined, format };
+    const filename = `export-${id}-${from || ""}-${to || ""}.${format}`;
+
+    if (format === "json") {
+      // backend throws json as json
+      const { data } = await api.post(`/doctor/export/${id}`, body, {
+        timeout: 60000
+      });
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    } else {
+      // backend throws csv as blob
+      const res = await api.post(`/doctor/export/${id}`, body, {
+      responseType: "arraybuffer",
+      timeout: 60000
     });
-    const mime = format === "csv" ? "text/csv" : "application/json";
-    const blob = new Blob([res.data], { type: mime });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `export-${id}-${from || ""}-${to || ""}.${format}`;
-    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      const blob = new Blob([res.data], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    }
   };
 
   return (

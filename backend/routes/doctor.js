@@ -1,7 +1,7 @@
 const express = require("express")
 const doctor = express.Router();
 const DB = require('../db/dbConn.js')
-const json2csv = require("json2csv")
+const { Parser } = require('json2csv');
 
 // doctor info
 
@@ -34,7 +34,7 @@ doctor.get('/:id', async (req, res, next) => {
 
 // GET /doctor/export/id, date-start, date_end, format(json/csv)
 // fetches doctor info in a date range and returns a file in a chosen format
-doctor.get('/export/:id', async (req, res, next) => {
+doctor.post('/export/:id', async (req, res, next) => {
     var date_start = req.body.date_start;
     var date_end = req.body.date_end;
     var format = req.body.format;
@@ -53,10 +53,14 @@ doctor.get('/export/:id', async (req, res, next) => {
     else if (format == 'csv') {
         // convert json to csv
         try {
-            const opts = {};
-            const parser = new Parser(opts);
+            // wizardry to sanitize the csv (it keeps stringifying everything)
+            const fields = queryResult.length ? Object.keys(queryResult[0]) : [];
+            const parser = new Parser({ fields, header: false });
             const csv = parser.parse(queryResult);
-            console.log(csv);
+            const header  = fields.join(',');                     // unquoted header
+            const csvReal = header + '\n' + csv;
+            //console.log(csv);
+            return res.status(200).send(csvReal);
         } catch (err) {
             console.error(err);
         }
@@ -67,9 +71,9 @@ doctor.get('/export/:id', async (req, res, next) => {
 })
 
 
-// GET /doctor/comparison/id?date_start=&date_end=
+// GET /doctor/series/id: date_start=&date_end=
 // fetches doctor info and constructs line chart data
-doctor.get('/comparison/:id', async (req, res, next) => {
+doctor.get('/series/:id', async (req, res, next) => {
     var date_start = req.body.date_start;
     var date_end = req.body.date_end;
     try {
