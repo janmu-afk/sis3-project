@@ -34,7 +34,7 @@ dataPool.listDocs = () => {
 // NOTE: might need to rewrite later
 dataPool.fetchDoc = (id) => {
   return new Promise((resolve, reject) => {
-    conn.query(`SELECT ime, naziv_de, naziv_iz, enota, ulica, kraj, obseg, kolicnik, sprejem FROM Zdravnik AS Z JOIN Dejavnost AS D ON Z.sifra_de = D.sifra_de JOIN Izvajalec AS I ON Z.sifra_iz = I.sifra_iz JOIN Zaposlitev_zdravnika AS Za ON Z.sifra_zd = Za.sifra_zd WHERE datum = CURDATE() AND sifra_zd = ?`, id, (err, res) => {
+    conn.query(`SELECT ime, naziv_de, naziv_iz, enota, ulica, kraj, kolicnik, obseg, sprejem FROM Zdravnik AS Z JOIN Dejavnost AS D ON Z.sifra_de = D.sifra_de JOIN Izvajalec AS I ON Z.sifra_iz = I.sifra_iz JOIN Zaposlitev_zdravnika AS Za ON Z.sifra_zd = Za.sifra_zd WHERE datum = CURDATE() AND Z.sifra_zd = ?`, Number(id), (err, res) => {
       if (err) { return reject(err) }
       return resolve(res)
     })
@@ -44,7 +44,7 @@ dataPool.fetchDoc = (id) => {
 // GET /doctor/annotation/id
 dataPool.fetchAnnotations = (id) => {
   return new Promise((resolve, reject) => {
-    conn.query(`SELECT username, tekst FROM Zdravnik AS Z JOIN Pripomba AS P ON Z.sifra_zd = P.sifra_zd JOIN Uporabnik AS U ON U.enaslov = P.enaslov WHERE sifra_zd = ?`, id, (err, res) => {
+    conn.query(`SELECT username, tekst FROM Zdravnik AS Z JOIN Pripomba AS P ON Z.sifra_zd = P.sifra_zd JOIN Uporabnik AS U ON U.enaslov = P.enaslov WHERE Z.sifra_zd = ?`, Number(id), (err, res) => {
       if (err) { return reject(err) }
       return resolve(res)
     })
@@ -109,6 +109,15 @@ dataPool.listUserBookmarks = (id) => {
   })
 }
 
+dataPool.listUserBookmarks = (id) => {
+  return new Promise((resolve, reject) => {
+    conn.query(`INSERT INTO Zaznamek VALUES ?`, id, (err, res) => {
+      if (err) { return reject(err) }
+      return resolve(res)
+    })
+  })
+}
+
 // helper funcs
 
 // GET /doctor/provider/list
@@ -131,12 +140,21 @@ dataPool.listSpecializations = () => {
   })
 }
 
-// special
+// special (in use within backend)
 
 // get the user's password
 dataPool.getPassword = (username) => {
   return new Promise((resolve, reject) => {
     conn.query(`SELECT geslo FROM Uporabnik WHERE username = ?`, username, (err, res) => {
+      if (err) { return reject(err) }
+      return resolve(res)
+    })
+  })
+}
+
+dataPool.getEmail = (username) => {
+  return new Promise((resolve, reject) => {
+    conn.query(`SELECT enaslov FROM Uporabnik WHERE username = ?`, username, (err, res) => {
       if (err) { return reject(err) }
       return resolve(res)
     })

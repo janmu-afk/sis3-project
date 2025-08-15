@@ -20,7 +20,7 @@ export default function TopBar() {
         <Container>
           <Navbar.Brand href="/">App</Navbar.Brand>
           <Nav className="ms-auto">
-            {!user ? (
+            {!user?.username ? (
               <>
                 <Button variant="outline-light" size="sm" onClick={() => setShowLogin(true)}>Login</Button>
                 <Button className="ms-2" size="sm" onClick={() => setShowRegister(true)}>Register</Button>
@@ -39,7 +39,7 @@ export default function TopBar() {
                     }
                   }}
                 >
-                  {user}'s bookmarks
+                  {user.username}'s bookmarks
                 </Dropdown.Toggle>
                 <Dropdown.Menu>
                   {bmItems.length === 0 ? (

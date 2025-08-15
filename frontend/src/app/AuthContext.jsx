@@ -9,7 +9,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    try { const { data } = await api.get("/user/session"); setUser(data.username || null); }
+    try { const { data } = await api.get("/user/session"); setUser(data || null); }
     catch { setUser(null); }
     finally { setLoading(false); }
   }, []);

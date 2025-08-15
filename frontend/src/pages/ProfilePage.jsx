@@ -20,8 +20,8 @@ export default function ProfilePage() {
 
   const load = async () => {
     const [{ data: p }, { data: c }] = await Promise.all([
-      api.get(`/api/profiles/${id}`),
-      api.get(`/api/profiles/${id}/comments`)
+      api.get(`/doctor/${id}`),
+      api.get(`/doctor/annotation/${id}`)
     ]);
     setProfile(p); setComments(c || []);
   };
@@ -44,8 +44,8 @@ export default function ProfilePage() {
     <>
       <Card className="mb-3">
         <Card.Body>
-          <Card.Title>{profile.name || id}</Card.Title>
-          {profile.location && <div className="text-muted">{profile.location}</div>}
+          <Card.Title>{profile.ime || id}</Card.Title>
+          {profile.naziv_iz && <div className="text-muted">{profile.naziv_de}</div>}
           {/* more fields as needed */}
           <div className="mt-2 d-flex gap-2">
             <Button variant="outline-primary" onClick={() => setShowGraph(true)}>Generate Graph</Button>
