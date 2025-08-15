@@ -1,11 +1,18 @@
 import { useState } from "react";
 import { Navbar, Nav, Container, Button, Modal, Form, Dropdown } from "react-bootstrap";
 import { useAuth } from "../app/AuthContext";
+import { Link } from "react-router-dom";
+import { api } from "../lib/api";
 
 export default function TopBar() {
   const { user, login, register, logout } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);;
+
+  //specifically for the bookmark
+  const [bmOpen, setBmOpen] = useState(false);
+  const [bmItems, setBmItems] = useState([]);
+  const [bmLoading, setBmLoading] = useState(false);
 
   return (
     <>
@@ -19,15 +26,27 @@ export default function TopBar() {
                 <Button className="ms-2" size="sm" onClick={() => setShowRegister(true)}>Register</Button>
               </>
             ) : (
-              <Dropdown align="end">
-                <Dropdown.Toggle variant="outline-light" size="sm">{user.username}</Dropdown.Toggle>
+              <Dropdown align="end" show={bmOpen} onToggle={setBmOpen}>
+                <Dropdown.Toggle
+                  as={Button}
+                  variant="outline-light"
+                  size="sm"
+                  onClick={async () => {
+                    setBmOpen(o => !o);
+                    if (!bmOpen) {
+                      const { data } = await api.get("/user/bookmarks");
+                      setBmItems(Array.isArray(data) ? data : []);
+                    }
+                  }}
+                >
+                  {user}'s bookmarks
+                </Dropdown.Toggle>
                 <Dropdown.Menu>
-                  <Dropdown.Header>Bookmarks</Dropdown.Header>
-                  {(user.bookmarks || []).map(b => (
-                    <Dropdown.Item key={b.id} href={`/${b.id}`}>{b.title || b.id}</Dropdown.Item>
-                  ))}
-                  <Dropdown.Divider />
-                  <Dropdown.Item onClick={logout}>Logout</Dropdown.Item>
+                  {bmItems.length === 0 ? (
+                    <Dropdown.Item disabled>No bookmarks</Dropdown.Item>
+                  ) : (
+                    bmItems.map((name, i) => <Dropdown.Item key={i} disabled>{name}</Dropdown.Item>)
+                  )}
                 </Dropdown.Menu>
               </Dropdown>
             )}

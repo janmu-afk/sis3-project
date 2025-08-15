@@ -21,16 +21,16 @@ const session = require('express-session')
 app.set('trust proxy', 1) // trust first proxy
 app.use(session({
    secret: 'some secret',
-   resave: true,
-   saveUninitialized: true,
-   cookie: { secure: false }
+   resave: false,
+   saveUninitialized: false,
+   cookie: { httpOnly: true, sameSite: 'lax', secure: false }
   }))
 
 
 //Some configurations
 app.use(express.urlencoded({extended : true}));
 app.use(cors({
-   origin: 'http://localhost:5918',
+   origin: process.env.FRONT,
    methods: ['POST', 'PUT', 'GET', 'OPTIONS', 'HEAD'],
    credentials: true
 }))
@@ -47,6 +47,7 @@ app.use(cors({
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "build", "index.html"))
 })
+
 
 app.use('/doctor', doctor)
 app.use('/user', user)

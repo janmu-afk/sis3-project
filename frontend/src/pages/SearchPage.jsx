@@ -8,26 +8,31 @@ export default function SearchPage() {
   const [all, setAll] = useState([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
 
   useEffect(() => {
     let alive = true;
     (async () => {
-      try { const { data } = await api.get("/api/results"); if (alive) setAll(Array.isArray(data) ? data : []); }
+      try { const { data } = await api.get("/doctor/list"); if (alive) setAll(Array.isArray(data) ? data : []); }
+      catch (e) { console.error("GET /doctor/list failed", e?.response?.status, e?.response?.data || e?.message);
+      if (alive) setError(e?.response?.data?.message || `HTTP ${e?.response?.status || 0}`); }
       finally { if (alive) setLoading(false); }
     })();
     return () => { alive = false; };
   }, []);
 
+  // the "search function"
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return all;
     return all.filter(it => {
-      const title = (it.title || "").toLowerCase();
+      const title = (it.ime || "").toLowerCase();
       const tags = Array.isArray(it.tags) ? it.tags.join(" ").toLowerCase() : "";
       return title.includes(s) || tags.includes(s);
     });
   }, [q, all]);
-
+  if (error) return <div className="alert alert-danger">Failed to load results: {error}</div>;
   if (loading) return <div>Loading…</div>;
 
   return (
@@ -40,9 +45,10 @@ export default function SearchPage() {
       />
       <ListGroup>
         {filtered.map(it => (
-          <ListGroup.Item key={it.id} action as={Link} to={`/${it.id}`}>
-            {it.title || it.id}
-            {it.subtitle && <div className="text-muted small">{it.subtitle}</div>}
+          <ListGroup.Item key={it.sifra_zd} action as={Link} to={`/${it.sifra_zd}`}>
+            {it.ime}
+            <div className="text-muted small">{it.naziv_iz}</div>
+            <div className="text-muted small">{it.naziv_de}</div>
           </ListGroup.Item>
         ))}
       </ListGroup>

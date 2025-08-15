@@ -23,7 +23,7 @@ let dataPool = {}
 // GET /doctor/list
 dataPool.listDocs = () => {
   return new Promise((resolve, reject) => {
-    conn.query(`SELECT ime, naziv_iz, naziv_de FROM Zdravnik JOIN Izvajalec ON Zdravnik.sifra_iz=Izvajalec.sifra_iz JOIN Dejavnost ON Zdravnik.sifra_de = Dejavnost.sifra_de`, (err, res) => {
+    conn.query(`SELECT sifra_zd, ime, naziv_iz, naziv_de FROM Zdravnik JOIN Izvajalec ON Zdravnik.sifra_iz=Izvajalec.sifra_iz JOIN Dejavnost ON Zdravnik.sifra_de = Dejavnost.sifra_de`, (err, res) => {
       if (err) { return reject(err) }
       return resolve(res)
     })
@@ -84,27 +84,7 @@ dataPool.fetchDocRange = (id) => {
 }
 
 
-// helper funcs
 
-// GET /doctor/provider/list
-dataPool.listProviders = () => {
-  return new Promise((resolve, reject) => {
-    conn.query(`SELECT naziv_iz FROM Izvajalec`, (err, res) => {
-      if (err) { return reject(err) }
-      return resolve(res)
-    })
-  })
-}
-
-// GET /doctor/specialization/list
-dataPool.listSpecializations = () => {
-  return new Promise((resolve, reject) => {
-    conn.query(`SELECT naziv_de FROM Dejavnost`, (err, res) => {
-      if (err) { return reject(err) }
-      return resolve(res)
-    })
-  })
-}
 
 
 // user funcs
@@ -129,7 +109,39 @@ dataPool.listUserBookmarks = (id) => {
   })
 }
 
-// POST /user/bookmarks/id
+// helper funcs
+
+// GET /doctor/provider/list
+dataPool.listProviders = () => {
+  return new Promise((resolve, reject) => {
+    conn.query(`SELECT naziv_iz FROM Izvajalec`, (err, res) => {
+      if (err) { return reject(err) }
+      return resolve(res)
+    })
+  })
+}
+
+// GET /doctor/specialization/list
+dataPool.listSpecializations = () => {
+  return new Promise((resolve, reject) => {
+    conn.query(`SELECT naziv_de FROM Dejavnost`, (err, res) => {
+      if (err) { return reject(err) }
+      return resolve(res)
+    })
+  })
+}
+
+// special
+
+// get the user's password
+dataPool.getPassword = (username) => {
+  return new Promise((resolve, reject) => {
+    conn.query(`SELECT geslo FROM Uporabnik WHERE username = ?`, username, (err, res) => {
+      if (err) { return reject(err) }
+      return resolve(res)
+    })
+  })
+}
 
 module.exports = dataPool;
 
