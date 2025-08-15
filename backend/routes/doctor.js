@@ -32,35 +32,6 @@ doctor.get('/:id', async (req, res, next) => {
 })
 
 
-// GET /doctor/annotation/id
-// fetches all annotations made about a specific doctor
-doctor.get('/annotation/:id', async (req, res, next) => {
-    try {
-        var queryResult = await DB.fetchAnnotations(req.params.id);
-        res.json(queryResult)
-    }
-    catch (err) {
-        console.log(err)
-        res.sendStatus(500)
-    }
-})
-
-// POST /doctor/annotation/id: text
-// posts an annotation about a doctor (auth required)
-doctor.get('/annotation/:id', async (req, res, next) => {
-    var text = req.body.text + ""
-    if (req.session.logged_in) {
-        try {
-            var queryResult = await DB.postAnnotations(req.params.id, text);
-            res.json(queryResult)
-        }
-        catch (err) {
-            console.log(err)
-            res.sendStatus(500)
-        }
-    }
-})
-
 // GET /doctor/export/id, date-start, date_end, format(json/csv)
 // fetches doctor info in a date range and returns a file in a chosen format
 doctor.get('/export/:id', async (req, res, next) => {
@@ -95,6 +66,7 @@ doctor.get('/export/:id', async (req, res, next) => {
     }
 })
 
+
 // GET /doctor/comparison/id?date_start=&date_end=
 // fetches doctor info and constructs line chart data
 doctor.get('/comparison/:id', async (req, res, next) => {
@@ -112,6 +84,36 @@ doctor.get('/comparison/:id', async (req, res, next) => {
     // graph construction
     // Recharts uses { time: 'YYYY-MM-DD', value: x } formatting
 })
+
+
+// POST /doctor/comment/:id: text
+doctor.post('/comment/:id',  async (req, res, next) => {
+    var id = req.params.id;
+    var text = req.body.text;
+    var email = req.session.email
+    if (req.session.logged_in && text) {
+        try { var query = await DB.postComment(id, text, email); }
+        catch (err) {
+            console.log(err)
+            res.sendStatus(500)
+        }
+        res.sendStatus(200)
+    }
+})
+
+// GET /doctor/comment/id
+// fetches all comments made about a specific doctor
+doctor.get('/comment/:id', async (req, res, next) => {
+    try {
+        var queryResult = await DB.fetchComments(req.params.id);
+        res.json(queryResult)
+    }
+    catch (err) {
+        console.log(err)
+        res.sendStatus(500)
+    }
+})
+
 
 // helper funcs
 

@@ -42,18 +42,18 @@ dataPool.fetchDoc = (id) => {
 }
 
 // GET /doctor/annotation/id
-dataPool.fetchAnnotations = (id) => {
+dataPool.fetchComments = (id) => {
   return new Promise((resolve, reject) => {
-    conn.query(`SELECT username, tekst FROM Zdravnik AS Z JOIN Pripomba AS P ON Z.sifra_zd = P.sifra_zd JOIN Uporabnik AS U ON U.enaslov = P.enaslov WHERE Z.sifra_zd = ?`, Number(id), (err, res) => {
+    conn.query(`SELECT id_pripombe, username, tekst FROM Zdravnik AS Z JOIN Pripomba AS P ON Z.sifra_zd = P.sifra_zd JOIN Uporabnik AS U ON U.enaslov = P.enaslov WHERE Z.sifra_zd = ?`, Number(id), (err, res) => {
       if (err) { return reject(err) }
       return resolve(res)
     })
   })
 }
 
-// POST /doctor/annotation/id?text=
+// POST /doctor/annotation/id: text
 // NOTE: session cookie
-dataPool.postAnnotations = (id, text, email) => {
+dataPool.postComment = (id, text, email) => {
   return new Promise((resolve, reject) => {
     conn.query(`INSERT INTO Pripomba (tekst, sifra_zd, enaslov) VALUES (?,?,?)`, [text, id, email], (err, res) => {
       if (err) { return reject(err) }

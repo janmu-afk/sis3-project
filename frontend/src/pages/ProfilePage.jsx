@@ -45,7 +45,7 @@ export default function ProfilePage() {
   const load = async () => {
     const [{ data: p }, { data: c }] = await Promise.all([
       api.get(`/doctor/${id}`),
-      api.get(`/doctor/annotation/${id}`)
+      api.get(`/doctor/comment/${id}`)
     ]);
     setProfile(Array.isArray(p) ? (p[0] ?? null) : (p ?? null)); setComments(c || []);
   };
@@ -56,10 +56,10 @@ export default function ProfilePage() {
 
   const postComment = async () => {
     if (!newComment.trim()) return;
-    await api.post(`/api/profiles/${id}/comments`, { text: newComment.trim() });
+    await api.post(`/doctor/comment/${id}`, { text: newComment.trim() });
     setNewComment("");
-    const { data } = await api.get(`/user/bookmarks/${id}`);
-    setComments(data || []);
+    const { data } = await api.get(`/doctor/comment/${id}`);
+    load(); // easy fix :)
   };
 
   if (!profile) return <div>Loading…</div>;
@@ -91,17 +91,7 @@ export default function ProfilePage() {
       </Card>
 
       <h5>Comments</h5>
-      <ListGroup className="mb-2">
-        {comments.map(c => (
-          <ListGroup.Item key={c.id}>
-            <div>{c.text}</div>
-            <div className="text-muted small">
-              {c.author?.username}{profile.datum ? `${formatDateOnly(profile.datum)}` : ""}
-            </div>
-          </ListGroup.Item>
-        ))}
-      </ListGroup>
-
+      
       {user?.username ? (
         <div className="d-flex gap-2">
           <Form.Control
@@ -115,6 +105,19 @@ export default function ProfilePage() {
       ) : (
         <div className="text-muted">Login to comment.</div>
       )}
+
+      <ListGroup className="mb-2">
+        {comments.map(c => (
+          <ListGroup.Item key={c.id_pripombe}>
+            <div>{c.text}</div>
+            <div className="text-muted small">
+              <b>{c.username}</b>: {c.tekst}
+            </div>
+          </ListGroup.Item>
+        ))}
+      </ListGroup>
+
+      
 
       <GraphModal show={showGraph} onHide={() => setShowGraph(false)} id={id} />
       <ExportModal show={showExport} onHide={() => setShowExport(false)} id={id} />
